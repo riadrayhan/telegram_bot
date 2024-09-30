@@ -4,13 +4,13 @@ const express = require('express');
 const path = require('path');
 
 const app = express();
-const token = process.env.TELEGRAM_BOT_TOKEN; // Load from .env or Render env vars
+const token = process.env.TELEGRAM_BOT_TOKEN; // Load from Render environment variables or .env
 
 // Initialize the bot with webhooks
 const bot = new TelegramBot(token, { webHook: true });
 
-// Set the webhook URL
-const URL = process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000'; // Render provides this env var automatically
+// Set the webhook URL using Render's RENDER_EXTERNAL_URL environment variable
+const URL = process.env.RENDER_EXTERNAL_URL;
 bot.setWebHook(`${URL}/bot${token}`);
 
 // Serve static files (HTML, CSS, etc.)
