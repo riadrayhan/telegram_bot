@@ -1,11 +1,36 @@
 const TelegramBot = require('node-telegram-bot-api');
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
+const net = require('net');
+
 const token = '7568885051:AAGOLMzgD971lYQ9k17aNO5Rr9Cwo62U-wI';
 const bot = new TelegramBot(token, { polling: true });
 
 // Store user data: points, clicks, and store purchases
 let userData = {};
+
+// Function to find an available port
+function findAvailablePort(startPort) {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer();
+    server.unref();
+    server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        findAvailablePort(startPort + 1).then(resolve).catch(reject);
+      } else {
+        reject(err);
+      }
+    });
+
+    server.listen(startPort, () => {
+      const { port } = server.address();
+      server.close(() => {
+        resolve(port);
+      });
+    });
+  });
+}
 
 // Function to send the main interface message
 const sendMainInterface = (chatId) => {
@@ -135,7 +160,7 @@ bot.on('callback_query', (query) => {
 
 // Express server setup
 const app = express();
-const port = process.env.PORT || 7000;
+const startPort = process.env.PORT || 7000;
 
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
@@ -152,11 +177,34 @@ app.get('/api/user/:chatId', (req, res) => {
   res.json(user);
 });
 
-// Start the Express server
-app.listen(port, () => console.log(`Server running on port ${port}`));
+// API endpoint to update user points (simulating a click)
+app.post('/api/user/:chatId', (req, res) => {
+  const chatId = req.params.chatId;
+  if (!userData[chatId]) {
+    userData[chatId] = { points: 0, clicks: 0, boostActive: false, earningRate: 10 };
+  }
+  userData[chatId].points += userData[chatId].earningRate;
+  userData[chatId].clicks += 1;
+  res.json(userData[chatId]);
+});
+
+// API endpoint to activate boost
+app.post('/api/user/:chatId/boost', (req, res) => {
+  const chatId = req.params.chatId;
+  if (!userData[chatId]) {
+    userData[chatId] = { points: 0, clicks: 0, boostActive: false, earningRate: 10 };
+  }
+  if (!userData[chatId].boostActive) {
+    userData[chatId].points += 100;
+    userData[chatId].boostActive = true;
+    setTimeout(() => {
+      userData[chatId].boostActive = false;
+    }, 5 * 60000); // 5 minutes
+  }
+  res.json(userData[chatId]);
+});
 
 // Create the necessary directories and files
-const fs = require('fs');
 const publicDir = path.join(__dirname, 'public');
 if (!fs.existsSync(publicDir)){
     fs.mkdirSync(publicDir);
@@ -288,19 +336,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     coinButton.addEventListener('click', () => {
-        // Simulating a click to earn points
         fetch(\`/api/user/\${userId}\`, { method: 'POST' })
             .then(() => updateUserInfo());
     });
 
     boostButton.addEventListener('click', () => {
-        // Simulating a boost
         fetch(\`/api/user/\${userId}/boost\`, { method: 'POST' })
             .then(() => updateUserInfo());
     });
 
     storeButton.addEventListener('click', () => {
-        // Open store modal or navigate to store page
         alert('Store functionality not implemented in this demo');
     });
 
@@ -311,5 +356,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
 fs.writeFileSync(path.join(publicDir, 'app.js'), appJs);
 
-// You'll need to add a coin image to the public directory
-// For this example, you can use a placeholder or add your own image named 'coin.png'
+// Start the server with dynamic port selection
+findAvailablePort(startPort)
+  .then((port) => {
+    const server = app.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+    });
+
+    // Graceful shutdown
+    process.on('SIGINT', () => {
+      console.log('Shutting down gracefully');
+      server.close(() => {
+        console.log('Server closed');
+        process.exit(0);
+      });
+    });
+  })
+  .catch((err) => {
+    console.error('Failed to find an available port:', err);
+  });

@@ -17,19 +17,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     coinButton.addEventListener('click', () => {
-        // Simulating a click to earn points
         fetch(`/api/user/${userId}`, { method: 'POST' })
             .then(() => updateUserInfo());
     });
 
     boostButton.addEventListener('click', () => {
-        // Simulating a boost
         fetch(`/api/user/${userId}/boost`, { method: 'POST' })
             .then(() => updateUserInfo());
     });
 
     storeButton.addEventListener('click', () => {
-        // Open store modal or navigate to store page
         alert('Store functionality not implemented in this demo');
     });
 
