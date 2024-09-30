@@ -1,36 +1,36 @@
 const TelegramBot = require('node-telegram-bot-api');
 const express = require('express');
 const path = require('path');
-const fs = require('fs');
-const net = require('net');
+const app = express();
 
+// Replace with your bot token and URL
 const token = '7568885051:AAGOLMzgD971lYQ9k17aNO5Rr9Cwo62U-wI';
-const bot = new TelegramBot(token, { polling: true });
+const bot = new TelegramBot(token, { webHook: true });
 
-// Store user data: points, clicks, and store purchases
+// Replace with your actual URL (e.g., https://your-domain.com)
+const url = 'https://telegram-bot-1kn9.onrender.com';
+const port = process.env.PORT || 3000;
+
+// Set up the webhook
+bot.setWebHook(`${url}/bot${token}`);
+
+// Serve static files (CSS, images, etc.)
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Serve the HTML file for the dashboard interface
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/index.html'));
+});
+
+// Middleware to handle incoming updates
+app.use(express.json());
+app.post(`/bot${token}`, (req, res) => {
+  bot.processUpdate(req.body);
+  res.sendStatus(200);
+});
+
+// Bot logic
 let userData = {};
-
-// Function to find an available port
-function findAvailablePort(startPort) {
-  return new Promise((resolve, reject) => {
-    const server = net.createServer();
-    server.unref();
-    server.on('error', (err) => {
-      if (err.code === 'EADDRINUSE') {
-        findAvailablePort(startPort + 1).then(resolve).catch(reject);
-      } else {
-        reject(err);
-      }
-    });
-
-    server.listen(startPort, () => {
-      const { port } = server.address();
-      server.close(() => {
-        resolve(port);
-      });
-    });
-  });
-}
 
 // Function to send the main interface message
 const sendMainInterface = (chatId) => {
@@ -158,220 +158,7 @@ bot.on('callback_query', (query) => {
   }
 });
 
-// Express server setup
-const app = express();
-const startPort = process.env.PORT || 7000;
-
-// Serve static files from the 'public' directory
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Serve the main page
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// Start the Express server
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });
-
-// API endpoint to get user data
-app.get('/api/user/:chatId', (req, res) => {
-  const chatId = req.params.chatId;
-  const user = userData[chatId] || { points: 0, clicks: 0, boostActive: false, earningRate: 10 };
-  res.json(user);
-});
-
-// API endpoint to update user points (simulating a click)
-app.post('/api/user/:chatId', (req, res) => {
-  const chatId = req.params.chatId;
-  if (!userData[chatId]) {
-    userData[chatId] = { points: 0, clicks: 0, boostActive: false, earningRate: 10 };
-  }
-  userData[chatId].points += userData[chatId].earningRate;
-  userData[chatId].clicks += 1;
-  res.json(userData[chatId]);
-});
-
-// API endpoint to activate boost
-app.post('/api/user/:chatId/boost', (req, res) => {
-  const chatId = req.params.chatId;
-  if (!userData[chatId]) {
-    userData[chatId] = { points: 0, clicks: 0, boostActive: false, earningRate: 10 };
-  }
-  if (!userData[chatId].boostActive) {
-    userData[chatId].points += 100;
-    userData[chatId].boostActive = true;
-    setTimeout(() => {
-      userData[chatId].boostActive = false;
-    }, 5 * 60000); // 5 minutes
-  }
-  res.json(userData[chatId]);
-});
-
-// Create the necessary directories and files
-const publicDir = path.join(__dirname, 'public');
-if (!fs.existsSync(publicDir)){
-    fs.mkdirSync(publicDir);
-}
-
-// Create index.html
-const indexHtml = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NotCoin Clone</title>
-    <link rel="stylesheet" href="/styles.css">
-</head>
-<body>
-    <div class="container">
-        <h1>NotCoin Clone</h1>
-        <div id="userInfo">
-            <p>User: <span id="userId"></span></p>
-            <p>Points: <span id="points"></span></p>
-            <p>Clicks: <span id="clicks"></span></p>
-            <p>Earning Rate: <span id="earningRate"></span></p>
-        </div>
-        <div class="coin" id="coinButton">
-            <img src="/coin.png" alt="Coin">
-        </div>
-        <button id="boostButton" class="boost-button">🚀 Boost</button>
-        <button id="storeButton" class="store-button">🛒 Store</button>
-    </div>
-    <script src="/app.js"></script>
-</body>
-</html>
-`;
-
-fs.writeFileSync(path.join(publicDir, 'index.html'), indexHtml);
-
-// Create styles.css
-const stylesCss = `
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f0f0f0;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-}
-
-.container {
-    background-color: white;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    text-align: center;
-}
-
-h1 {
-    color: #4a4a4a;
-}
-
-#userInfo {
-    margin-bottom: 20px;
-}
-
-.coin {
-    width: 150px;
-    height: 150px;
-    margin: 20px auto;
-    cursor: pointer;
-    transition: transform 0.1s;
-}
-
-.coin:active {
-    transform: scale(0.95);
-}
-
-.coin img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-button {
-    margin: 10px;
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
-    border: none;
-    border-radius: 5px;
-    transition: background-color 0.3s;
-}
-
-.boost-button {
-    background-color: #ffd700;
-    color: #4a4a4a;
-}
-
-.store-button {
-    background-color: #4caf50;
-    color: white;
-}
-
-button:hover {
-    opacity: 0.8;
-}
-`;
-
-fs.writeFileSync(path.join(publicDir, 'styles.css'), stylesCss);
-
-// Create app.js
-const appJs = `
-document.addEventListener('DOMContentLoaded', () => {
-    const userId = '123456789'; // Replace with actual user ID from Telegram
-    const coinButton = document.getElementById('coinButton');
-    const boostButton = document.getElementById('boostButton');
-    const storeButton = document.getElementById('storeButton');
-
-    function updateUserInfo() {
-        fetch(\`/api/user/\${userId}\`)
-            .then(response => response.json())
-            .then(user => {
-                document.getElementById('userId').textContent = userId;
-                document.getElementById('points').textContent = user.points;
-                document.getElementById('clicks').textContent = user.clicks;
-                document.getElementById('earningRate').textContent = user.earningRate;
-            });
-    }
-
-    coinButton.addEventListener('click', () => {
-        fetch(\`/api/user/\${userId}\`, { method: 'POST' })
-            .then(() => updateUserInfo());
-    });
-
-    boostButton.addEventListener('click', () => {
-        fetch(\`/api/user/\${userId}/boost\`, { method: 'POST' })
-            .then(() => updateUserInfo());
-    });
-
-    storeButton.addEventListener('click', () => {
-        alert('Store functionality not implemented in this demo');
-    });
-
-    // Initial user info update
-    updateUserInfo();
-});
-`;
-
-fs.writeFileSync(path.join(publicDir, 'app.js'), appJs);
-
-// Start the server with dynamic port selection
-findAvailablePort(startPort)
-  .then((port) => {
-    const server = app.listen(port, () => {
-      console.log(`Server running on port ${port}`);
-    });
-
-    // Graceful shutdown
-    process.on('SIGINT', () => {
-      console.log('Shutting down gracefully');
-      server.close(() => {
-        console.log('Server closed');
-        process.exit(0);
-      });
-    });
-  })
-  .catch((err) => {
-    console.error('Failed to find an available port:', err);
-  });

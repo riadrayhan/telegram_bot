@@ -1,27 +1,32 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NotCoin Clone</title>
-    <link rel="stylesheet" href="/styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NotCoin Clone</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>NotCoin Clone</h1>
-        <div id="userInfo">
-            <p>User: <span id="userId"></span></p>
-            <p>Points: <span id="points"></span></p>
-            <p>Clicks: <span id="clicks"></span></p>
-            <p>Earning Rate: <span id="earningRate"></span></p>
-        </div>
-        <div class="coin" id="coinButton">
-            <img src="/coin.png" alt="Coin">
-        </div>
-        <button id="boostButton" class="boost-button">🚀 Boost</button>
-        <button id="storeButton" class="store-button">🛒 Store</button>
-    </div>
-    <script src="/app.js"></script>
+  <div class="container">
+    <header>
+      <h1>NotCoin</h1>
+      <p>User: <span id="user-id">12345</span></p>
+      <p>Points: <span id="points">0</span></p>
+      <p>Clicks: <span id="clicks">0</span></p>
+      <p>Earning Rate: <span id="rate">10 points/click</span></p>
+    </header>
+    
+    <main>
+      <button id="earn-points" class="button">💰 Click to Earn Points</button>
+      <button id="boost-points" class="button">🚀 Boost (+100 points)</button>
+      <button id="open-store" class="button">🛒 Store</button>
+    </main>
+
+    <footer>
+      <p>Powered by Telegram</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>
