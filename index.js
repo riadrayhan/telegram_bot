@@ -1,5 +1,6 @@
 const TelegramBot = require('node-telegram-bot-api');
-const express = require('express'); // Add this to create the server
+const express = require('express');
+const path = require('path');
 const token = '7568885051:AAGOLMzgD971lYQ9k17aNO5Rr9Cwo62U-wI';
 const bot = new TelegramBot(token, { polling: true });
 
@@ -136,9 +137,179 @@ bot.on('callback_query', (query) => {
 const app = express();
 const port = process.env.PORT || 7000;
 
+// Serve static files from the 'public' directory
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Serve the main page
 app.get('/', (req, res) => {
-  res.send('Telegram bot is running.');
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// API endpoint to get user data
+app.get('/api/user/:chatId', (req, res) => {
+  const chatId = req.params.chatId;
+  const user = userData[chatId] || { points: 0, clicks: 0, boostActive: false, earningRate: 10 };
+  res.json(user);
 });
 
 // Start the Express server
 app.listen(port, () => console.log(`Server running on port ${port}`));
+
+// Create the necessary directories and files
+const fs = require('fs');
+const publicDir = path.join(__dirname, 'public');
+if (!fs.existsSync(publicDir)){
+    fs.mkdirSync(publicDir);
+}
+
+// Create index.html
+const indexHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NotCoin Clone</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>NotCoin Clone</h1>
+        <div id="userInfo">
+            <p>User: <span id="userId"></span></p>
+            <p>Points: <span id="points"></span></p>
+            <p>Clicks: <span id="clicks"></span></p>
+            <p>Earning Rate: <span id="earningRate"></span></p>
+        </div>
+        <div class="coin" id="coinButton">
+            <img src="/coin.png" alt="Coin">
+        </div>
+        <button id="boostButton" class="boost-button">🚀 Boost</button>
+        <button id="storeButton" class="store-button">🛒 Store</button>
+    </div>
+    <script src="/app.js"></script>
+</body>
+</html>
+`;
+
+fs.writeFileSync(path.join(publicDir, 'index.html'), indexHtml);
+
+// Create styles.css
+const stylesCss = `
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+h1 {
+    color: #4a4a4a;
+}
+
+#userInfo {
+    margin-bottom: 20px;
+}
+
+.coin {
+    width: 150px;
+    height: 150px;
+    margin: 20px auto;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.coin:active {
+    transform: scale(0.95);
+}
+
+.coin img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+button {
+    margin: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.boost-button {
+    background-color: #ffd700;
+    color: #4a4a4a;
+}
+
+.store-button {
+    background-color: #4caf50;
+    color: white;
+}
+
+button:hover {
+    opacity: 0.8;
+}
+`;
+
+fs.writeFileSync(path.join(publicDir, 'styles.css'), stylesCss);
+
+// Create app.js
+const appJs = `
+document.addEventListener('DOMContentLoaded', () => {
+    const userId = '123456789'; // Replace with actual user ID from Telegram
+    const coinButton = document.getElementById('coinButton');
+    const boostButton = document.getElementById('boostButton');
+    const storeButton = document.getElementById('storeButton');
+
+    function updateUserInfo() {
+        fetch(\`/api/user/\${userId}\`)
+            .then(response => response.json())
+            .then(user => {
+                document.getElementById('userId').textContent = userId;
+                document.getElementById('points').textContent = user.points;
+                document.getElementById('clicks').textContent = user.clicks;
+                document.getElementById('earningRate').textContent = user.earningRate;
+            });
+    }
+
+    coinButton.addEventListener('click', () => {
+        // Simulating a click to earn points
+        fetch(\`/api/user/\${userId}\`, { method: 'POST' })
+            .then(() => updateUserInfo());
+    });
+
+    boostButton.addEventListener('click', () => {
+        // Simulating a boost
+        fetch(\`/api/user/\${userId}/boost\`, { method: 'POST' })
+            .then(() => updateUserInfo());
+    });
+
+    storeButton.addEventListener('click', () => {
+        // Open store modal or navigate to store page
+        alert('Store functionality not implemented in this demo');
+    });
+
+    // Initial user info update
+    updateUserInfo();
+});
+`;
+
+fs.writeFileSync(path.join(publicDir, 'app.js'), appJs);
+
+// You'll need to add a coin image to the public directory
+// For this example, you can use a placeholder or add your own image named 'coin.png'
