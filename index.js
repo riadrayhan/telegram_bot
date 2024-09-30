@@ -1,25 +1,24 @@
 const TelegramBot = require('node-telegram-bot-api');
 const express = require('express');
-const path = require('path');
 const app = express();
 
-// Replace with your bot token and URL
+// Replace with your bot token
 const token = '7568885051:AAGOLMzgD971lYQ9k17aNO5Rr9Cwo62U-wI';
 const bot = new TelegramBot(token, { webHook: true });
 
 // Replace with your actual URL (e.g., https://your-domain.com)
-const url = 'https://telegram-bot-1kn9.onrender.com';
-const port = process.env.PORT || 3000;
+const url = 'https://telegram-bot-1-oz7c.onrender.com';
+const port = process.env.PORT || 7001;
 
 // Set up the webhook
 bot.setWebHook(`${url}/bot${token}`);
 
 // Serve static files (CSS, images, etc.)
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static('public'));
 
-// Serve the HTML file for the dashboard interface
+// Serve the HTML file for the Web App
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/index.html'));
+  res.sendFile(__dirname + '/public/index.html');
 });
 
 // Middleware to handle incoming updates
@@ -37,22 +36,23 @@ const sendMainInterface = (chatId) => {
   const user = userData[chatId] || { points: 0, clicks: 0, boostActive: false, earningRate: 10 };
 
   const message = `
-    *NotCoin*
-    _User:_ *${chatId}*
-    _Points:_ *${user.points}*
-    _Clicks:_ *${user.clicks}*
-    _Earning Rate:_ *${user.earningRate} points per click*
+*💰 NotCoin Balance*
+*Points:* ${user.points}
+*Clicks:* ${user.clicks}
+*Earning Rate:* ${user.earningRate} points per click
 
-    Click below to earn more points or visit the store!
+Choose an action below:
   `;
 
   const options = {
     parse_mode: 'Markdown',
     reply_markup: {
       inline_keyboard: [
-        [{ text: '💰 Click to Earn Points', callback_data: 'earn_points' }],
-        [{ text: '🚀 Boost (+100 points)', callback_data: 'boost_points' }],
-        [{ text: '🛒 Store', callback_data: 'store' }]
+        [{ text: '💰 Earn Points', callback_data: 'earn_points' }],
+        [{ text: '🚀 Boosts', callback_data: 'boosts' }],
+        [{ text: '🧸 Frens', callback_data: 'frens' }],
+        [{ text: '🛒 Store', callback_data: 'store' }],
+        [{ text: '🌐 Open Dashboard', web_app: { url: `${url}` } }]
       ]
     }
   };
@@ -91,70 +91,33 @@ bot.on('callback_query', (query) => {
   const chatId = query.message.chat.id;
   const user = userData[chatId];
 
-  if (query.data === 'earn_points') {
-    // User clicks to earn points
-    user.points += user.earningRate;
-    user.clicks += 1;
-    bot.answerCallbackQuery(query.id, { text: `You earned ${user.earningRate} points! Total: ${user.points}` });
-
-    // Update the interface
-    sendMainInterface(chatId);
-
-  } else if (query.data === 'boost_points') {
-    // User clicks the boost button
-    if (user.boostActive) {
-      bot.answerCallbackQuery(query.id, { text: 'You already have an active boost!' });
-    } else {
-      user.points += 100;
-      user.boostActive = true;
-      bot.answerCallbackQuery(query.id, { text: 'Boost applied! You earned 100 points! Total: ' + user.points });
-
-      // Reset boost after a certain time (e.g., 5 minutes)
-      setTimeout(() => {
-        user.boostActive = false;
-        bot.sendMessage(chatId, 'Your boost has expired. You can boost again!');
-      }, 5 * 60000); // 5 minutes
-
+  switch (query.data) {
+    case 'earn_points':
+      // User clicks to earn points
+      user.points += user.earningRate;
+      user.clicks += 1;
+      bot.answerCallbackQuery(query.id, { text: `You earned ${user.earningRate} points! Total: ${user.points}` });
       // Update the interface
       sendMainInterface(chatId);
-    }
+      break;
 
-  } else if (query.data === 'store') {
-    // Store menu: users can buy upgrades here
-    const storeMessage = `
-      🛒 *Store*
-      - Buy a 2x Earning Rate for 500 points
-      - Buy 500 points for $5 (for example)
-    `;
+    case 'boosts':
+      // Handle boost
+      bot.sendMessage(chatId, '🚀 Boosts are coming soon.');
+      break;
 
-    const options = {
-      parse_mode: 'Markdown',
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: 'Buy 2x Earning Rate (500 points)', callback_data: 'buy_earning_rate' }],
-          [{ text: 'Back', callback_data: 'back_to_main' }]
-        ]
-      }
-    };
+    case 'frens':
+      // Handle frens
+      bot.sendMessage(chatId, '🧸 Frens feature is coming soon.');
+      break;
 
-    bot.sendMessage(chatId, storeMessage, options);
+    case 'store':
+      // Handle store
+      bot.sendMessage(chatId, '🛒 The store is under development.');
+      break;
 
-  } else if (query.data === 'buy_earning_rate') {
-    // User purchases 2x earning rate
-    if (user.points >= 500) {
-      user.points -= 500;
-      user.earningRate *= 2; // Double the earning rate
-      bot.answerCallbackQuery(query.id, { text: 'You have purchased 2x earning rate! Total points: ' + user.points });
-
-      // Update the interface
-      sendMainInterface(chatId);
-    } else {
-      bot.answerCallbackQuery(query.id, { text: 'Not enough points!' });
-    }
-
-  } else if (query.data === 'back_to_main') {
-    // Return to the main interface
-    sendMainInterface(chatId);
+    default:
+      bot.answerCallbackQuery(query.id, { text: 'Unknown command.' });
   }
 });
 

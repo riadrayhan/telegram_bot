@@ -7,7 +7,7 @@ document.getElementById('earn-points').addEventListener('click', () => {
   
   document.getElementById('boost-points').addEventListener('click', () => {
     alert('Boost activated!');
-  });
+  }); 
   
   document.getElementById('open-store').addEventListener('click', () => {
     alert('Opening store...');
