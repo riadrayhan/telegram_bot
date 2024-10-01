@@ -1,27 +1,38 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NotCoin Clone</title>
+    <title>BijoySS Hunter</title>
     <link rel="stylesheet" href="/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <h1>NotCoin Clone</h1>
-        <div id="userInfo">
-            <p>User: <span id="userId"></span></p>
-            <p>Points: <span id="points"></span></p>
-            <p>Clicks: <span id="clicks"></span></p>
-            <p>Earning Rate: <span id="earningRate"></span></p>
-        </div>
-        <div class="coin" id="coinButton">
-            <img src="/coin.png" alt="Coin">
-        </div>
-        <button id="boostButton" class="boost-button">🚀 Boost</button>
-        <button id="storeButton" class="store-button">🛒 Store</button>
+    <div class="game-container">
+        <header>
+            <h1>BijoySS Hunter</h1>
+            <div id="userInfo">
+                <p>Hunter: <span id="userId">Loading...</span></p>
+                <p>Gold: <span id="points">0</span></p>
+                <p>Hunts: <span id="clicks">0</span></p>
+                <p>Power: <span id="earningRate">0</span>/hunt</p>
+            </div>
+        </header>
+        
+        <main>
+            <div id="countdown" class="countdown"></div>
+            <div id="coinButton" class="target">
+                <img src="/coin.png" alt="Target" width="150px">
+            </div>
+            <button id="boostButton" class="boost-button">🚀 Power Boost</button>
+        </main>
+        
+        <footer>
+            <button id="achievementsButton" class="coming-soon">🏆 Achievements</button>
+            <button id="shopButton" class="coming-soon">🛒 Hunter's Shop</button>
+        </footer>
     </div>
+
     <script src="/app.js"></script>
 </body>
 </html>
