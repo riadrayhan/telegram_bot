@@ -24,7 +24,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 let users = {};
 
-const initializeUser = (userId, userName = 'Unknown User') => {
+const initializeUser = (userId, userName = 'Unknown') => {
   if (!users[userId]) {
     users[userId] = {
       name: userName,
