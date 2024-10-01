@@ -1,49 +1,27 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NotCoin Clone</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NotCoin Clone</title>
+    <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <div class="container">
-    <header>
-      <div class="navbar">
-        <span id="telegram">TELEGRAM</span>
-        <h1>NotCoin</h1>
-        <span id="bot-status">bot</span>
-      </div>
-      <div class="join-squad">
-        <button>Join squad</button>
-      </div>
-    </header>
-
-    <main>
-      <div class="coin">
-        <img src="coin.png" alt="coin">
-      </div>
-      <div class="points">
-        <h2>3,546,035</h2>
-        <div class="status">
-          <img src="trophy.png" alt="Silver Trophy">
-          <span>Silver</span>
+    <div class="container">
+        <h1>NotCoin Clone</h1>
+        <div id="userInfo">
+            <p>User: <span id="userId"></span></p>
+            <p>Points: <span id="points"></span></p>
+            <p>Clicks: <span id="clicks"></span></p>
+            <p>Earning Rate: <span id="earningRate"></span></p>
         </div>
-      </div>
-    </main>
-
-    <footer>
-      <div class="energy">
-        <span>⚡ 10 / 1500</span>
-      </div>
-      <div class="actions">
-        <button class="frens">🧸 Frens</button>
-        <button class="earn">💰 Earn</button>
-        <button class="boost">🚀 Boosts</button>
-      </div>
-    </footer>
-  </div>
-
-  <script src="app.js"></script>
+        <div class="coin" id="coinButton">
+            <img src="/coin.png" alt="Coin">
+        </div>
+        <button id="boostButton" class="boost-button">🚀 Boost</button>
+        <button id="storeButton" class="store-button">🛒 Store</button>
+    </div>
+    <script src="/app.js"></script>
 </body>
 </html>
